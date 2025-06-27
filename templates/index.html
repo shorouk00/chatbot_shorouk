@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Chatbot - Professional Style</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css1.css') }}">
+  </head>
+  <body>
+    <section id="chatbot-container" role="region" aria-label="AI chatbot interactive conversation">
+      <header class="chat-header">
+        <div class="title" aria-live="polite" aria-atomic="true" tabindex="0">
+          AI Chatbot
+        </div>
+        <button class="close-btn" aria-label="Clear chat and restart" title="Clear chat and restart" id="closeChatBtn">&times;</button>
+      </header>
+      <main class="chat-messages" id="chatMessages" tabindex="0" aria-live="polite" aria-relevant="additions">
+        </main>
+      <form class="chat-input-form" id="chatForm" aria-label="Send message to AI chatbot" autocomplete="off" novalidate>
+        <textarea id="chatInput" name="chatInput" placeholder="Type your message..." rows="1" aria-multiline="true" required></textarea>
+        <button type="submit" class="send-btn" aria-label="Send message" id="sendBtn" disabled>
+          <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" fill="white" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+        </button>
+      </form>
+    </section>
+  
+    <script>
+      (() => {
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+        const sendBtn = document.getElementById('sendBtn');
+        const closeBtn = document.getElementById('closeChatBtn');
+  
+        chatInput.addEventListener('input', () => {
+          sendBtn.disabled = chatInput.value.trim().length === 0;
+          autoResizeTextArea(chatInput);
+        });
+  
+        function autoResizeTextArea(textarea) {
+          textarea.style.height = 'auto';
+          textarea.style.height = textarea.scrollHeight + 'px';
+        }
+  
+        function scrollToBottom() {
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+  
+        function addMessage(content, sender = 'bot') {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'message-wrapper ' + sender;
+  
+          const message = document.createElement('div');
+          message.className = 'message';
+          message.textContent = content;
+  
+          wrapper.appendChild(message);
+          chatMessages.appendChild(wrapper);
+          scrollToBottom();
+        }
+  
+        function initChat() {
+          chatMessages.innerHTML = '';
+          const welcomeMsg = "Hello! I'm your AI assistant. How can I help you today?";
+          addMessage(welcomeMsg, 'bot');
+        }
+  
+        chatForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const userMessage = chatInput.value.trim();
+          if (userMessage.length === 0) return;
+  
+          addMessage(userMessage, 'user');
+          chatInput.value = '';
+          sendBtn.disabled = true;
+  
+          // --- BEGIN MODIFICATION ---
+          // تم تغيير Content-Type إلى application/json
+          // وتم تغيير body لاستخدام JSON.stringify
+          const response = await fetch('/ask', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json', // <--- هذا هو التعديل الرئيسي هنا
+            },
+            body: JSON.stringify({ query: userMessage }) // <--- وهذا هو التعديل الرئيسي هنا
+          });
+          // --- END MODIFICATION ---
+  
+          const data = await response.json();
+          
+          // هنا سأضيف معالجة أساسية لرسائل الخطأ
+          if (response.ok) { // إذا كانت الاستجابة بنجاح (رمز 2xx)
+              addMessage(data.answer, 'bot');
+          } else { // إذا كان هناك خطأ (مثل 500)
+              addMessage(`Error: ${data.error || 'Unknown error occurred.'}`, 'bot');
+          }
+        });
+  
+        closeBtn.addEventListener('click', () => {
+          chatMessages.innerHTML = '';
+          initChat();
+          chatInput.value = '';
+          sendBtn.disabled = true;
+        });
+  
+        initChat();
+      })();
+    </script>
+  </body>
+  </html>

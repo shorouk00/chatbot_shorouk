@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: langchain-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: HF_API_KEY
+        value: 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

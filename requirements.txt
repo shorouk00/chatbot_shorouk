@@ -1,0 +1,10 @@
+Flask
+langchain
+langchain-community
+chromadb
+huggingface-hub
+transformers
+torch
+gdown
+requests
+sentence-transformers
